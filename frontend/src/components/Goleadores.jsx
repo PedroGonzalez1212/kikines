@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react";
 //            APERTURA 25, CLAUSURA 25, APERTURA 26
 // Cuando conectes el backend, reemplazás este array por un fetch a tu API.
 
-const FIXTURE_DATA = [
+export const FIXTURE_DATA = [
   {
     id: 1, nombre: "LIGUILLA 23", anio: 2023,
     fechas: [
