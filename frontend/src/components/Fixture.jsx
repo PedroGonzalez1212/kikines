@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { torneos } from '../data/fixture'
+import { usePartidos } from "../hooks/usePartidos"
 
 // --- HELPERS ---
 
@@ -24,8 +24,6 @@ function calcStats(partidos) {
 }
 
 // --- VARIANTES DE ANIMACIÓN ---
-// Son objetos que definen los estados de una animación.
-// "initial" = cómo empieza, "animate" = cómo termina, "exit" = cómo sale
 
 const fadeUpVariants = {
   initial: { opacity: 0, y: 30 },
@@ -34,9 +32,7 @@ const fadeUpVariants = {
 
 const containerVariants = {
   animate: {
-    transition: {
-      staggerChildren: 0.08, // cada hijo se anima 0.08s después del anterior
-    },
+    transition: { staggerChildren: 0.08 },
   },
 }
 
@@ -50,12 +46,19 @@ const cardVariants = {
 function PartidoItem({ partido }) {
   const res = getResultado(partido.goles_kikines, partido.goles_rival)
 
+  // Supabase devuelve partido.goles y partido.asistencias
+  // Cada gol tiene: cantidad, penal, en_contra, jugadores: { nombre, apellido }
+  const goles = partido.goles || []
+  const asistencias = partido.asistencias || []
+
+  const tieneDetalle = goles.length > 0 || asistencias.length > 0
+
   return (
     <div className="group border-b border-violet-900/20 last:border-b-0">
 
       {/* Fila principal */}
       <div className="flex items-center justify-between px-5 py-3">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
           <span className="text-xs font-medium text-zinc-500 w-24 shrink-0">
             {partido.fase}
           </span>
@@ -73,44 +76,56 @@ function PartidoItem({ partido }) {
         </div>
       </div>
 
-      {/* Detalle con hover */}
-      {(partido.goleadores.length > 0 || partido.asistidores.length > 0) && (
-        <div className="max-h-0 overflow-hidden group-hover:max-h-40 transition-all duration-300 ease-in-out">
+      {/* Detalle con hover — solo si hay goles o asistencias */}
+      {tieneDetalle && (
+        <div className="max-h-0 overflow-hidden group-hover:max-h-60 transition-all duration-300 ease-in-out">
           <div className="px-5 pb-4 pt-1 bg-zinc-900/50 flex gap-8 flex-wrap border-t border-violet-900/20">
 
-            <div>
-              <p className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mb-2">
-                Goleadores
-              </p>
-              <ul className="flex flex-col gap-1">
-                {partido.goleadores.map((g, i) => (
-                  <li key={i} className="flex items-center gap-2 text-sm text-zinc-200">
-                    <span className="w-1.5 h-1.5 rounded-full bg-violet-500 shrink-0" />
-                    {g.enContra ? (
-                      <span className="text-zinc-500 italic">Gol en contra</span>
-                    ) : (
-                      <>
-                        {g.jugador}
-                        {g.cantidad > 1 && <span className="text-violet-400 text-xs"> x{g.cantidad}</span>}
-                        {g.penal && <span className="text-zinc-500 text-xs"> (P)</span>}
-                      </>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {partido.asistidores.length > 0 && (
+            {goles.length > 0 && (
               <div>
                 <p className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mb-2">
-                  Asistidores
+                  Goleadores
                 </p>
                 <ul className="flex flex-col gap-1">
-                  {partido.asistidores.map((a, i) => (
+                  {goles.map((g, i) => (
                     <li key={i} className="flex items-center gap-2 text-sm text-zinc-200">
                       <span className="w-1.5 h-1.5 rounded-full bg-violet-500 shrink-0" />
-                      {a.jugador}
-                      {a.cantidad > 1 && <span className="text-violet-400 text-xs"> x{a.cantidad}</span>}
+                      {g.en_contra ? (
+                        <span className="text-zinc-500 italic">Gol en contra</span>
+                      ) : (
+                        <>
+                          {g.jugadores
+                            ? `${g.jugadores.nombre} ${g.jugadores.apellido}`
+                            : "Jugador desconocido"}
+                          {g.cantidad > 1 && (
+                            <span className="text-violet-400 text-xs"> x{g.cantidad}</span>
+                          )}
+                          {g.penal && (
+                            <span className="text-zinc-500 text-xs"> (P)</span>
+                          )}
+                        </>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {asistencias.length > 0 && (
+              <div>
+                <p className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mb-2">
+                  Asistencias
+                </p>
+                <ul className="flex flex-col gap-1">
+                  {asistencias.map((a, i) => (
+                    <li key={i} className="flex items-center gap-2 text-sm text-zinc-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-violet-500 shrink-0" />
+                      {a.jugadores
+                        ? `${a.jugadores.nombre} ${a.jugadores.apellido}`
+                        : "Jugador desconocido"}
+                      {a.cantidad > 1 && (
+                        <span className="text-violet-400 text-xs"> x{a.cantidad}</span>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -131,7 +146,6 @@ function TorneoCard({ torneo }) {
   const [abierto, setAbierto] = useState(false)
 
   return (
-    // motion.div reemplaza al div normal — le agrega capacidades de animación
     <motion.div
       variants={cardVariants}
       transition={{ duration: 0.4, ease: "easeOut" }}
@@ -148,12 +162,13 @@ function TorneoCard({ torneo }) {
           <div>
             <p className="text-sm font-semibold text-white">{torneo.nombre}</p>
             <p className="text-xs text-zinc-500 mt-0.5">
-              {torneo.serie && <span className="text-violet-500/70 mr-2">{torneo.serie}</span>}
+              {torneo.serie && (
+                <span className="text-violet-500/70 mr-2">{torneo.serie}</span>
+              )}
               {calcStats(torneo.partidos)}
             </p>
           </div>
         </div>
-        {/* El ícono rota con una transición de Framer Motion */}
         <motion.span
           animate={{ rotate: abierto ? 180 : 0 }}
           transition={{ duration: 0.2 }}
@@ -163,7 +178,6 @@ function TorneoCard({ torneo }) {
         </motion.span>
       </button>
 
-      {/* AnimatePresence permite animar elementos cuando desaparecen del DOM */}
       <AnimatePresence initial={false}>
         {abierto && (
           <motion.div
@@ -189,12 +203,12 @@ function TorneoCard({ torneo }) {
 // --- COMPONENTE PRINCIPAL ---
 
 export default function Fixture() {
+  const { torneos, loading, error } = usePartidos()
+
   return (
     <section id="fixture" className="py-20 px-4 max-w-3xl mx-auto">
 
-      {/* Título animado al entrar al viewport */}
-      {/* whileInView se activa cuando el elemento es visible en pantalla */}
-      {/* viewport once:true significa que se anima solo la primera vez */}
+      {/* Título */}
       <motion.div
         className="mb-10"
         variants={fadeUpVariants}
@@ -211,17 +225,38 @@ export default function Fixture() {
         </p>
       </motion.div>
 
-      {/* Contenedor con stagger — anima los hijos en cascada */}
-      <motion.div
-        variants={containerVariants}
-        initial="initial"
-        whileInView="animate"
-        viewport={{ once: true }}
-      >
-        {[...torneos].reverse().map((torneo) => (
-          <TorneoCard key={torneo.id} torneo={torneo} />
-        ))}
-      </motion.div>
+      {/* Estado de carga */}
+      {loading && (
+        <div className="flex items-center gap-3 text-zinc-500 text-sm py-8">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="w-4 h-4 border-2 border-violet-500 border-t-transparent rounded-full"
+          />
+          Cargando partidos...
+        </div>
+      )}
+
+      {/* Estado de error */}
+      {error && (
+        <div className="text-red-400 text-sm py-4 px-4 rounded-lg border border-red-900/30 bg-red-950/20">
+          Error al cargar los datos: {error}
+        </div>
+      )}
+
+      {/* Lista de torneos — más reciente primero */}
+      {!loading && !error && (
+        <motion.div
+          variants={containerVariants}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true }}
+        >
+          {[...torneos].reverse().map((torneo) => (
+            <TorneoCard key={torneo.id} torneo={torneo} />
+          ))}
+        </motion.div>
+      )}
 
     </section>
   )

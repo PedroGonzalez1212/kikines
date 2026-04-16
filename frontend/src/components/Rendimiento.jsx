@@ -8,33 +8,27 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Cell,
 } from "recharts";
-
-import { FIXTURE_DATA } from "./Goleadores";
-
-
+import { usePartidos } from "../hooks/usePartidos";
 
 // ─── LÓGICA DE DATOS ─────────────────────────────────────────────────────────
-function calcularStats(fixture, torneoId) {
+function calcularStats(torneos, torneoId) {
   let ganados = 0, empatados = 0, perdidos = 0;
   let golesFavor = 0, golesContra = 0;
 
   const torneosFiltrados =
     torneoId === "todos"
-      ? fixture
-      : fixture.filter((t) => t.id === parseInt(torneoId));
+      ? torneos
+      : torneos.filter((t) => t.id === parseInt(torneoId));
 
   torneosFiltrados.forEach((torneo) => {
-    torneo.fechas.forEach((fecha) => {
-      fecha.partidos.forEach(({ goles_kikines: gk, goles_rival: gr }) => {
-        if (gk === null || gr === null) return;
-        golesFavor += gk;
-        golesContra += gr;
-        if (gk > gr) ganados++;
-        else if (gk === gr) empatados++;
-        else perdidos++;
-      });
+    torneo.partidos.forEach(({ goles_kikines: gk, goles_rival: gr }) => {
+      if (gk === null || gr === null) return;
+      golesFavor += gk;
+      golesContra += gr;
+      if (gk > gr) ganados++;
+      else if (gk === gr) empatados++;
+      else perdidos++;
     });
   });
 
@@ -42,20 +36,19 @@ function calcularStats(fixture, torneoId) {
   return { ganados, empatados, perdidos, jugados, golesFavor, golesContra };
 }
 
-// Arma los datos para el gráfico de barras por torneo
-function calcularPorTorneo(fixture) {
-  return fixture.map((torneo) => {
+function calcularPorTorneo(torneos) {
+  return torneos.map((torneo) => {
     let g = 0, e = 0, p = 0;
-    torneo.fechas.forEach((fecha) => {
-      fecha.partidos.forEach(({ goles_kikines: gk, goles_rival: gr }) => {
-        if (gk === null || gr === null) return;
-        if (gk > gr) g++;
-        else if (gk === gr) e++;
-        else p++;
-      });
+    torneo.partidos.forEach(({ goles_kikines: gk, goles_rival: gr }) => {
+      if (gk === null || gr === null) return;
+      if (gk > gr) g++;
+      else if (gk === gr) e++;
+      else p++;
     });
-    // Nombre corto para que entre en el eje X
-    const nombre = torneo.nombre.replace("LIGUILLA", "LIG").replace("CLAUSURA", "CL").replace("APERTURA", "AP");
+    const nombre = torneo.nombre
+      .replace("LIGUILLA", "LIG")
+      .replace("CLAUSURA", "CL")
+      .replace("APERTURA", "AP");
     return { nombre, Ganados: g, Empatados: e, Perdidos: p };
   });
 }
@@ -95,11 +88,28 @@ function StatCard({ label, value, sub, color }) {
 
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────────
 export default function Rendimiento() {
+  const { torneos, loading, error } = usePartidos();
   const [torneoId, setTorneoId] = useState("todos");
 
-  const stats = calcularStats(FIXTURE_DATA, torneoId);
-  const datosGrafico = calcularPorTorneo(FIXTURE_DATA);
+  if (loading) return (
+    <section id="rendimiento" className="py-20 px-4 flex items-center justify-center">
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full"
+      />
+    </section>
+  );
 
+  if (error) return (
+    <section id="rendimiento" className="py-20 px-4 flex items-center justify-center">
+      <p className="text-red-400 text-sm">Error al cargar datos: {error}</p>
+    </section>
+  );
+
+  // pct va DESPUÉS de los guards, cuando ya sabemos que torneos existe
+  const stats = calcularStats(torneos, torneoId);
+  const datosGrafico = calcularPorTorneo(torneos);
   const pct = (n) =>
     stats.jugados > 0 ? Math.round((n / stats.jugados) * 100) : 0;
 
@@ -140,7 +150,7 @@ export default function Rendimiento() {
           }}
         >
           <option value="todos">Todos los torneos</option>
-          {[...FIXTURE_DATA].reverse().map((t) => (
+          {[...torneos].reverse().map((t) => (
             <option key={t.id} value={t.id}>
               {t.nombre}
             </option>
@@ -156,12 +166,12 @@ export default function Rendimiento() {
         whileInView="animate"
         viewport={{ once: true }}
       >
-        <StatCard label="Jugados"    value={stats.jugados}      color="#a1a1aa" />
-        <StatCard label="Ganados"    value={stats.ganados}      color="#4ade80" sub={`${pct(stats.ganados)}%`} />
-        <StatCard label="Empatados"  value={stats.empatados}    color="#facc15" sub={`${pct(stats.empatados)}%`} />
-        <StatCard label="Perdidos"   value={stats.perdidos}     color="#f87171" sub={`${pct(stats.perdidos)}%`} />
-        <StatCard label="GF"         value={stats.golesFavor}   color="#a78bfa" sub="Goles a favor" />
-        <StatCard label="GC"         value={stats.golesContra}  color="#f87171" sub="Goles en contra" />
+        <StatCard label="Jugados"   value={stats.jugados}     color="#a1a1aa" />
+        <StatCard label="Ganados"   value={stats.ganados}     color="#4ade80" sub={`${pct(stats.ganados)}%`} />
+        <StatCard label="Empatados" value={stats.empatados}   color="#facc15" sub={`${pct(stats.empatados)}%`} />
+        <StatCard label="Perdidos"  value={stats.perdidos}    color="#f87171" sub={`${pct(stats.perdidos)}%`} />
+        <StatCard label="GF"        value={stats.golesFavor}  color="#a78bfa" sub="Goles a favor" />
+        <StatCard label="GC"        value={stats.golesContra} color="#f87171" sub="Goles en contra" />
       </motion.div>
 
       {/* Gráfico de barras — solo visible en "Todos los torneos" */}
@@ -177,17 +187,14 @@ export default function Rendimiento() {
           <p className="text-sm font-semibold text-zinc-400 mb-6 uppercase tracking-wider">
             Resultados por torneo
           </p>
-          {/* ResponsiveContainer hace que el gráfico se adapte al ancho del contenedor */}
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={datosGrafico} barCategoryGap="30%" barGap={3}>
-              {/* XAxis = eje horizontal con los nombres de torneos */}
               <XAxis
                 dataKey="nombre"
                 tick={{ fill: "#71717a", fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
               />
-              {/* YAxis = eje vertical con números */}
               <YAxis
                 tick={{ fill: "#71717a", fontSize: 11 }}
                 axisLine={false}
@@ -195,14 +202,12 @@ export default function Rendimiento() {
                 allowDecimals={false}
               />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(124,58,237,0.05)" }} />
-              {/* Cada <Bar> es una columna. dataKey conecta con la propiedad del objeto de datos */}
               <Bar dataKey="Ganados"   fill="#4ade80" radius={[4, 4, 0, 0]} />
               <Bar dataKey="Empatados" fill="#facc15" radius={[4, 4, 0, 0]} />
               <Bar dataKey="Perdidos"  fill="#f87171" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
 
-          {/* Leyenda manual */}
           <div className="flex gap-5 mt-4 justify-center">
             {[
               { label: "Ganados",   color: "#4ade80" },
@@ -218,7 +223,7 @@ export default function Rendimiento() {
         </motion.div>
       )}
 
-      {/* Vista de torneo individual: mini resumen visual */}
+      {/* Vista de torneo individual */}
       {torneoId !== "todos" && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -232,14 +237,16 @@ export default function Rendimiento() {
           </p>
           <div className="flex flex-col gap-4">
             {[
-              { label: "Ganados",   value: stats.ganados,   color: "#4ade80", bg: "rgba(74,222,128,0.15)" },
-              { label: "Empatados", value: stats.empatados, color: "#facc15", bg: "rgba(250,204,21,0.15)" },
-              { label: "Perdidos",  value: stats.perdidos,  color: "#f87171", bg: "rgba(248,113,113,0.15)" },
-            ].map(({ label, value, color, bg }) => (
+              { label: "Ganados",   value: stats.ganados,   color: "#4ade80" },
+              { label: "Empatados", value: stats.empatados, color: "#facc15" },
+              { label: "Perdidos",  value: stats.perdidos,  color: "#f87171" },
+            ].map(({ label, value, color }) => (
               <div key={label}>
                 <div className="flex justify-between text-xs mb-1.5">
                   <span style={{ color }} className="font-semibold">{label}</span>
-                  <span className="text-zinc-500">{value} partido{value !== 1 ? "s" : ""} · {pct(value)}%</span>
+                  <span className="text-zinc-500">
+                    {value} partido{value !== 1 ? "s" : ""} · {pct(value)}%
+                  </span>
                 </div>
                 <div className="h-2.5 rounded-full bg-zinc-800 overflow-hidden">
                   <motion.div

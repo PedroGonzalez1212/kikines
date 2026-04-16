@@ -11,6 +11,7 @@ import Goleadores from './components/Goleadores'
 import Galeria from './components/Galeria'
 import Sponsors from './components/Sponsors'
 import Footer from './components/Footer'
+import { usePartidos } from './hooks/usePartidos'
 
 import AdminLayout from './admin/AdminLayout'
 
@@ -32,6 +33,11 @@ function SitioPublico() {
 }
 
 function App() {
+  // dentro del componente App:
+    const { torneos, loading, error } = usePartidos()
+    console.log('torneos:', torneos)
+    console.log('loading:', loading)
+    console.log('error:', error)
   return (
     <BrowserRouter>
       <Routes>
