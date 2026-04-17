@@ -60,12 +60,12 @@ export default function CrearTorneo() {
             <select
               value={form.serie}
               onChange={e => setForm(f => ({ ...f, serie: e.target.value }))}
-              className={inputClass}
-              style={inputStyle}
+              className={inputClass + ' appearance-none'}
+              style={{ ...inputStyle, colorScheme: 'dark' }}
             >
-              <option value="">— Sin serie —</option>
+              <option value="" style={{ background: '#1a0a2e', color: '#a1a1aa' }}>— Sin serie —</option>
               {SERIES.map(s => (
-                <option key={s} value={s}>{s}</option>
+                <option key={s} value={s} style={{ background: '#1a0a2e', color: '#ffffff' }}>{s}</option>
               ))}
             </select>
           </div>

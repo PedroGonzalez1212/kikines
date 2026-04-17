@@ -143,15 +143,16 @@ export default function Rendimiento() {
         <select
           value={torneoId}
           onChange={(e) => setTorneoId(e.target.value)}
-          className="px-4 py-2.5 rounded-xl text-sm text-white outline-none cursor-pointer"
+          className="px-4 py-2.5 rounded-xl text-sm text-white outline-none cursor-pointer appearance-none"
           style={{
             background: "rgba(124,58,237,0.1)",
             border: "1px solid rgba(124,58,237,0.3)",
+            colorScheme: "dark",
           }}
         >
-          <option value="todos">Todos los torneos</option>
+          <option value="todos" style={{ background: '#1a0a2e', color: '#a1a1aa' }}>Todos los torneos</option>
           {[...torneos].reverse().map((t) => (
-            <option key={t.id} value={t.id}>
+            <option key={t.id} value={t.id} style={{ background: '#1a0a2e', color: '#ffffff' }}>
               {t.nombre}
             </option>
           ))}

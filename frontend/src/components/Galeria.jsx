@@ -68,7 +68,7 @@ export default function Galeria() {
       try {
         const { data, error } = await supabase
           .from('galeria')
-          .select('*')
+          .select('id, foto_url, descripcion, created_at')
           .order('created_at', { ascending: false })
 
         if (error) throw error

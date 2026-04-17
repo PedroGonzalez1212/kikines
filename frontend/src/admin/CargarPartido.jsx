@@ -8,12 +8,12 @@ function SelectorJugador({ jugadores, valor, onChange, placeholder }) {
     <select
       value={valor}
       onChange={e => onChange(e.target.value)}
-      className="flex-1 px-3 py-2 rounded-lg text-sm text-white outline-none"
-      style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)' }}
+      className="flex-1 px-3 py-2 rounded-lg text-sm text-white outline-none appearance-none"
+      style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)', colorScheme: 'dark' }}
     >
-      <option value="">— {placeholder} —</option>
+      <option value="" style={{ background: '#1a0a2e', color: '#a1a1aa' }}>— {placeholder} —</option>
       {jugadores.map(j => (
-        <option key={j.id} value={j.id}>
+        <option key={j.id} value={j.id} style={{ background: '#1a0a2e', color: '#ffffff' }}>
           #{j.numero_camiseta} {j.nombre} {j.apellido}
         </option>
       ))}
@@ -118,10 +118,10 @@ export default function CargarPartido() {
 
   // Cargar torneos y jugadores al montar
   useEffect(() => {
-    supabase.from('torneos').select('*').order('anio').then(({ data }) => {
+    supabase.from('torneos').select('id, nombre, serie, anio').order('anio').then(({ data }) => {
       if (data) setTorneos(data)
     })
-    supabase.from('jugadores').select('*').eq('activo', true).order('apellido').then(({ data }) => {
+    supabase.from('jugadores').select('id, nombre, apellido, numero_camiseta').eq('activo', true).order('apellido').then(({ data }) => {
       if (data) setJugadores(data)
     })
   }, [])
@@ -261,12 +261,12 @@ export default function CargarPartido() {
           <select
             value={form.torneo_id}
             onChange={e => setForm(f => ({ ...f, torneo_id: e.target.value }))}
-            className={inputClass}
-            style={inputStyle}
+            className={inputClass + ' appearance-none'}
+            style={{ ...inputStyle, colorScheme: 'dark' }}
           >
-            <option value="">— Seleccioná un torneo —</option>
+            <option value="" style={{ background: '#1a0a2e', color: '#a1a1aa' }}>— Seleccioná un torneo —</option>
             {[...torneos].reverse().map(t => (
-              <option key={t.id} value={t.id}>
+              <option key={t.id} value={t.id} style={{ background: '#1a0a2e', color: '#ffffff' }}>
                 {t.nombre} {t.serie ? `· ${t.serie}` : ''}
               </option>
             ))}

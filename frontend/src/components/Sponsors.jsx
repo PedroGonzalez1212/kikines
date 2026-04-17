@@ -1,16 +1,26 @@
 // src/components/Sponsors.jsx
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-
-// ─── DATOS ESTÁTICOS (temporales — se reemplazarán por fetch a Supabase) ─────
-const SPONSORS = [
-  { id: 1, nombre: "Sponsor 1", logo_url: "https://picsum.photos/seed/sp1/200/100", url: "https://google.com" },
-  { id: 2, nombre: "Sponsor 2", logo_url: "https://picsum.photos/seed/sp2/200/100", url: "https://google.com" },
-  { id: 3, nombre: "Sponsor 3", logo_url: "https://picsum.photos/seed/sp3/200/100", url: "https://google.com" },
-  { id: 4, nombre: "Sponsor 4", logo_url: "https://picsum.photos/seed/sp4/200/100", url: "https://google.com" },
-  { id: 5, nombre: "Sponsor 5", logo_url: "https://picsum.photos/seed/sp5/200/100", url: "https://google.com" },
-]
+import { supabase } from "../supabase"
 
 export default function Sponsors() {
+  const [sponsors, setSponsors] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function cargar() {
+      const { data } = await supabase
+        .from('sponsors')
+        .select('id, nombre, logo_url')
+        .order('nombre')
+      setSponsors(data ?? [])
+      setLoading(false)
+    }
+    cargar()
+  }, [])
+
+  if (loading || sponsors.length === 0) return null
+
   return (
     <section id="sponsors" className="py-20 px-4 max-w-5xl mx-auto">
 
@@ -44,12 +54,9 @@ export default function Sponsors() {
         whileInView="animate"
         viewport={{ once: true }}
       >
-        {SPONSORS.map(sponsor => (
-          <motion.a
+        {sponsors.map(sponsor => (
+          <motion.div
             key={sponsor.id}
-            href={sponsor.url}
-            target="_blank"
-            rel="noopener noreferrer"
             variants={{ initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 } }}
             whileHover={{ scale: 1.08, transition: { duration: 0.2 } }}
             className="block"
@@ -63,7 +70,7 @@ export default function Sponsors() {
               onMouseEnter={e => e.currentTarget.style.opacity = "1"}
               onMouseLeave={e => e.currentTarget.style.opacity = "0.6"}
             />
-          </motion.a>
+          </motion.div>
         ))}
       </motion.div>
 

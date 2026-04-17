@@ -166,16 +166,17 @@ export default function Goleadores() {
           <select
             value={torneoSeleccionado}
             onChange={(e) => setTorneoSeleccionado(e.target.value)}
-            className="text-sm font-medium rounded-xl px-4 py-2 outline-none cursor-pointer transition-all duration-200"
+            className="text-sm font-medium rounded-xl px-4 py-2 outline-none cursor-pointer transition-all duration-200 appearance-none"
             style={{
               background: "rgba(124,58,237,0.1)",
               border: "1px solid rgba(124,58,237,0.3)",
               color: "#e4e4e7",
+              colorScheme: "dark",
             }}
           >
-            <option value="todos">Todos los torneos</option>
+            <option value="todos" style={{ background: '#1a0a2e', color: '#a1a1aa' }}>Todos los torneos</option>
             {torneos.map((t) => (
-              <option key={t.id} value={t.id}>
+              <option key={t.id} value={t.id} style={{ background: '#1a0a2e', color: '#ffffff' }}>
                 {t.nombre}
               </option>
             ))}

@@ -209,7 +209,7 @@ export default function Plantel() {
       setLoading(true)
       const { data, error } = await supabase
         .from('jugadores')
-        .select('*')
+        .select('id, nombre, apellido, numero_camiseta, posicion, foto_url')
         .eq('activo', true)
         .order('apellido')
 
