@@ -5,4 +5,11 @@ export default defineConfig({
   plugins: [
     react(),
   ],
+  css: {
+    transformer: 'postcss',
+    lightningcss: undefined,
+  },
+  build: {
+    cssMinify: 'esbuild',
+  },
 })
