@@ -102,7 +102,7 @@ export default function Footer() {
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          {String.fromCharCode(169) + " " + anio + " Club Kikines · Salsipuedes, Cordoba, Argentina"}
+          {String.fromCharCode(169) + " " + anio + "Kikines · Cordoba, Argentina"}
         </motion.p>
 
       </div>
